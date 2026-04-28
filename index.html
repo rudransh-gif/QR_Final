@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+</head>
+<body>
+
+<h2>QR Scanner</h2>
+<button onclick="startScanner()">Start Scanner</button>
+<video id="preview" width="300"></video>
+<p id="result"></p>
+
+<script>
+const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxMyOhKi2hl6JCCgsq9kfYQNWHpXlNZcOEnIrvIAg2TE6m3QFdt3ryyde9B5WqnBAWM/exec";
+
+let codeReader;
+
+function startScanner() {
+  codeReader = new ZXing.BrowserMultiFormatReader();
+
+  codeReader.decodeFromVideoDevice(null, 'preview', (result, err) => {
+    if (result) {
+      handleScan(result.getText());
+    }
+  });
+}
+
+function handleScan(text) {
+  document.getElementById("result").innerText = "Processing...";
+
+  fetch(BACKEND_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ id: text })
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("result").innerText = data.message;
+  })
+  .catch(() => {
+    document.getElementById("result").innerText = "Network error";
+  });
+}
+</script>
+
+</body>
+</html>
